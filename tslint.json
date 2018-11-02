@@ -11,7 +11,8 @@
         "no-redundant-jsdoc": true,
         "no-implicit-dependencies": false,
         "no-submodule-imports": false,
-        "no-relative-imports": false
+        "no-relative-imports": false,
+        "export-name": false
         
     },
     "rulesDirectory": [],
