@@ -1,0 +1,7 @@
+[defaults]
+url=https://sentry.io/
+org=gaterking
+project=testdemo-k0
+
+[auth]
+token=24f18b37d23042cab3601e97c53915cca945ed5c1cff4d1ebdf0ae2acebf9cd2

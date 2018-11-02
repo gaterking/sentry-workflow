@@ -1,0 +1,6 @@
+{
+    "hooks": {
+        "commitlint": "commitlint",
+        "commitmsg": "commitlint -e $GIT_PARAMS"
+    }
+}
