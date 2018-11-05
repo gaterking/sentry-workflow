@@ -1,13 +1,9 @@
 /**
  * Sentry API基类
  */
-import fetch, { RequestInit } from 'node-fetch';
-import { URL } from 'url';
+import {request as axiosRequest} from './axiosRequest';
 import getConf, {IConfSentryApi} from './getConf';
-
-interface IApiInfo {
-    version: string;
-}
+import { IApiInfo, IHttpError } from './types';
 
 export class ApiBase {
     public authToken: string;
@@ -21,26 +17,31 @@ export class ApiBase {
         this.authToken = `Bearer ${authTokenData}`;
     }
 
-    public async apiInfo (): Promise<IApiInfo | void> {
-        return this.request<IApiInfo>('/api/0', {
-            method: 'get'
-        }, false);
-    }
-    protected async request<T> (url: string, options: RequestInit = {}, withAuth: boolean = true ): Promise<T|void> {
-        const fullUrl = new URL(url, this.baseUrl);
-
-        // tslint:disable-next-line:no-console
-        console.log(fullUrl.href);
-        return fetch(fullUrl.href, {
-            headers: {
-                Authorization: withAuth ? this.authToken : ''
-            },
-            ...options
-        }).then((res) => res.json())
-        .catch((err) => {
-            // tslint:disable-next-line:no-console
-            console.error(err);
-            return;
+    public async apiInfo (): Promise<IApiInfo | IHttpError> {
+        // return this.request<IApiInfo>('/api/0/', {
+        //     method: 'get'
+        // }, false);
+        return axiosRequest<IApiInfo>({
+            baseURL: this.baseUrl,
+            url: '/api/0/',
         });
     }
+
+    // protected async request<T> (url: string, options: RequestInit = {}, withAuth: boolean = true ): Promise<T|void> {
+    //     const fullUrl = new URL(url, this.baseUrl);
+
+    //     // tslint:disable-next-line:no-console
+    //     console.log(fullUrl.href);
+    //     return fetch(fullUrl.href, {
+    //         headers: {
+    //             Authorization: withAuth ? this.authToken : ''
+    //         },
+    //         ...options
+    //     }).then((res) => res.json())
+    //     .catch((err) => {
+    //         // tslint:disable-next-line:no-console
+    //         console.error(err);
+    //         return;
+    //     });
+    // }
 }

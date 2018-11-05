@@ -1,5 +1,6 @@
 import cli from '@sentry/cli';
 import * as helper from '@sentry/cli/js/helper';
+import {EnumPlatform, IHttpError, IProject, Projects, Teams} from 'sentry/api';
 import {buildSourceURL} from 'sourcemapHelper';
 import * as SentryCliPlugin from 'types/SentryCliPlugin';
 /**
@@ -8,10 +9,62 @@ import * as SentryCliPlugin from 'types/SentryCliPlugin';
 class SentryWorkflow {
     private cliInstance: cli;
     private configFile: string;
-    constructor (options: SentryCliPlugin.IWorkflowOption = { configFile: './.sentryclirc' }) {
+    private apiConfigFile: string;
+    constructor (options: SentryCliPlugin.IWorkflowOption = {
+        apiConfigFile: './sentryapi.config.js',
+        configFile: './.sentryclirc'
+    }) {
         this.configFile = options.configFile;
+        this.apiConfigFile = options.apiConfigFile;
         this.cliInstance = this.getSentryCli(this.configFile);
     }
+
+    /**
+     * 创建新的项目
+     *
+     * @param {string} orgSlug
+     * @param {string} teamSlug
+     * @param {string} project
+     * @param {EnumPlatform} platform
+     * @returns {Promise<void | string>} 返回空或错误日志
+     * @memberof SentryWorkflow
+     */
+    public async newProject (orgSlug: string,
+                             teamSlug: string,
+                             projectName: string,
+                             projectSlug: string,
+                             platform: EnumPlatform = EnumPlatform.js)
+    : Promise<string|void> {
+        const teamsApi = new Teams(this.apiConfigFile);
+        let projectList = await teamsApi.listProjects(orgSlug, teamSlug);
+        if (!(projectList instanceof Array)) {
+            projectList = projectList as IHttpError;
+            return projectList.data ?  projectList.data.detail : projectList.text;
+        }
+        projectList = projectList as IProject[];
+        let targetProject: IProject | null = null;
+        for (const p of projectList) {
+            if (p.slug === projectSlug) {
+                targetProject = p;
+                break;
+            }
+        }
+        if (!targetProject) {
+            // 未建立项目
+            const newProject = await teamsApi.createNewProject(orgSlug, teamSlug, projectName, projectSlug);
+            if (newProject.hasOwnProperty('code')) {
+                return (newProject as IHttpError).text;
+            } else {
+                targetProject = newProject as IProject;
+                const projectsApi = new Projects(this.apiConfigFile);
+                targetProject = (await projectsApi.UpdateProject(orgSlug, targetProject.slug, {
+                    platform
+                })) as IProject;
+            }
+        }
+        return;
+    }
+
     /**
      * 启动一次发布
      *

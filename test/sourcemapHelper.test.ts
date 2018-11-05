@@ -1,13 +1,13 @@
 /**
  * sourcemapHelper.ts
  */
-import assert from 'assert';
+import assert = require('assert');
 import path from 'path';
 import * as sourcemapHelper from 'sourcemapHelper';
 
 describe('sourcemapHelper', () => {
     describe.skip('generateMapFile', () => {
-        it('should generate map file', async () => {
+        it.skip('should generate map file', async () => {
             const mapFile: string = await sourcemapHelper.generateMapFile(['js'],
             'sourcemap',
             path.resolve(__dirname, '../sample/dist'));
@@ -16,7 +16,7 @@ describe('sourcemapHelper', () => {
     });
 
     describe.skip('buildSourceURL', () => {
-        it('should create sentry upload files', async () => {
+        it.skip('should create sentry upload files', async () => {
             await sourcemapHelper.buildSourceURL(['js'], 'sourcemap', path.resolve(__dirname, '../sample/dist'));
         });
     });

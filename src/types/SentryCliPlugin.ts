@@ -7,6 +7,8 @@ export interface IWorkflowOption {
      * 制定配置文件路径
      */
     configFile: string;
+
+    apiConfigFile: string;
 }
 
 export interface IReleaseOption {
