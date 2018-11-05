@@ -2,7 +2,6 @@ import find from 'find';
 import fsExtra from 'fs-extra';
 import fs from 'mz/fs';
 import path from 'path';
-import {URL} from 'url';
 
 interface IFileMapInfo {
     /**
@@ -31,11 +30,13 @@ const sourceMapUrlRegx: RegExp  = /\?!\/\/# sourceMappingURL=.*/;
  * @param publishBase 发布目录根路径绝对路径
  *
  */
-async function generateMapFile(includes: string[], sourceDist: string = '.', publishBase: string = __dirname): Promise<string> {
-    async function includeFilesFinder(): Promise<IFileMapInfo[]>  {
-        const includePromises: Promise<IFileMapInfo[]>[] = [];
+async function generateMapFile (includes: string[],
+                                sourceDist: string = '.',
+                                publishBase: string = __dirname): Promise<string> {
+    async function includeFilesFinder (): Promise<IFileMapInfo[]>  {
+        const includePromises: Array<Promise<IFileMapInfo[]>> = [];
         includes.forEach((includeStr: string) => {
-            includePromises.push(new Promise<IFileMapInfo[]>(async (resolve: Function): Promise<void> => {
+            includePromises.push(new Promise<IFileMapInfo[]>(async (resolve): Promise<void> => {
                 const includePath: string = path.resolve(publishBase, includeStr);
                 const findedFiles: string[] = [];
                 find.eachfile(/\.js$/, includePath, (file: string) => {
@@ -44,8 +45,8 @@ async function generateMapFile(includes: string[], sourceDist: string = '.', pub
                     resolve(findedFiles.map((fullFilePath: string): IFileMapInfo => {
                         return {
                             originBase: publishBase,
-                            orignFile: fullFilePath,
-                            originMap: ''
+                            originMap: '',
+                            orignFile: fullFilePath
                         };
                     }));
                  });
@@ -73,7 +74,7 @@ async function generateMapFile(includes: string[], sourceDist: string = '.', pub
  * @param sourceDist 待搜索的目录路径
  * @param publishBase 发布目录根路径绝对路径
  */
-function getSourceMaps(fileMaps: IFileMapInfo[], sourceDist: string, publishBase: string): IFileMapInfo[] {
+function getSourceMaps (fileMaps: IFileMapInfo[], sourceDist: string, publishBase: string): IFileMapInfo[] {
     const sourceMapFolder: string = path.join(publishBase, sourceDist);
     fileMaps.forEach((file: IFileMapInfo) => {
         const sourceMapName: string = `${path.basename(file.orignFile, '.js')}.js.map`;
@@ -96,10 +97,10 @@ function getSourceMaps(fileMaps: IFileMapInfo[], sourceDist: string, publishBase
  * @param publishBase 发布目录根路径绝对路径
  * @param urlPrefix sourceMappingURL前缀，以http(s)://或/或相对地址开头
  */
-async function buildSourceURL(includes: string[],
-                              sourceDist: string = '.',
-                              publishBase: string = __dirname,
-                              urlPrefix: string = ''): Promise<string> {
+async function buildSourceURL (includes: string[],
+                               sourceDist: string = '.',
+                               publishBase: string = __dirname,
+                               urlPrefix: string = ''): Promise<string> {
     const mapJsonFile: string  = await generateMapFile(includes, sourceDist, publishBase);
     const mapJsonContent: Buffer = fs.readFileSync(mapJsonFile);
     const mapJson: IFileMapInfo[] = JSON.parse(mapJsonContent.toString());
@@ -128,7 +129,7 @@ async function buildSourceURL(includes: string[],
     return sentryFolder;
 }
 
-function replaceSourceURL(fileData: string, newUrl: string = ''): string {
+function replaceSourceURL (fileData: string, newUrl: string = ''): string {
     const m: RegExpMatchArray | null = fileData.match(sourceMapUrlRegx);
     if (m) {
         return fileData.replace(sourceMapUrlRegx, newUrl);
