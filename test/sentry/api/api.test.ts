@@ -3,9 +3,10 @@
  */
 import assert = require('assert');
 import path from 'path';
+import {Types} from 'sentry/api';
 import {ApiBase} from 'sentry/api/apiBase';
 import {Organizations, Projects, Teams} from 'sentry/api/index';
-import {IError, IHttpError, IProject} from 'sentry/api/types';
+import { EnumPlatform } from 'sentry/api/types';
 
 const rcFile = './sentryapi_mock.config.js';
 describe('sentry.api', () => {
@@ -20,9 +21,9 @@ describe('sentry.api', () => {
         it.skip('should get version', async () => {
             const api: ApiBase = new ApiBase(path.join(__dirname, rcFile));
             const apiInfo = await api.apiInfo();
-            assert(apiInfo !== undefined);
-            if (apiInfo) {
-                assert(apiInfo.version === '0');
+            assert(apiInfo.success);
+            if (apiInfo.data) {
+                assert(apiInfo.data.version === '0');
             }
         }).timeout(60000);
     });
@@ -31,27 +32,19 @@ describe('sentry.api', () => {
         it.skip('should list projectList', async () => {
             const teamApi: Teams = new Teams(path.join(__dirname, rcFile));
             const result = await teamApi.listProjects('gaterking', '404');
-            assert((result as IProject[]).length > 0);
+            assert(result.success);
+            if (result.data) {
+                assert(result.data.length > 0);
+            }
         }).timeout(60000);
 
         it.skip('should create new project', async () => {
             const teamApi: Teams = new Teams(path.join(__dirname, rcFile));
             const result = await teamApi.createNewProject('gaterking', '404', 'ut0');
-            assert((result as IProject).name === 'ut0');
-        }).timeout(60000);
-
-        it.skip('should update project', async () => {
-            const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
-            const result = await projectsApi.UpdateProject('gaterking', '404', {
-                platform: 'javascript-vue'
-            });
-            assert((result as IProject).platform === 'javascript-vue');
-        }).timeout(60000);
-
-        it.skip('should delete project', async () => {
-            const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
-            const result = await projectsApi.DeleteProject('gaterking', 'ut0-v5');
-            assert((result as IHttpError).code === 204);
+            assert(result.success === true);
+            if (result.data) {
+                assert(result.data.name === 'ut0');
+            }
         }).timeout(60000);
     });
 
@@ -59,7 +52,42 @@ describe('sentry.api', () => {
         it.skip('should list projectList', async () => {
             const orgApi: Organizations = new Organizations(path.join(__dirname, rcFile));
             const result = await orgApi.listProjects('gaterking');
-            assert((result as IProject[]).length > 0);
+
+            assert(result.success === true);
+            if (result.data) {
+                assert(result.data.length > 0);
+            }
         }).timeout(60000);
+    });
+
+    describe('projects', () => {
+        it.skip('should update project', async () => {
+            const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
+            const result = await projectsApi.UpdateProject('gaterking', '404', {
+                platform: EnumPlatform.vue
+            });
+            assert(result.success === true);
+            if (result.data) {
+                assert(result.data.platform === EnumPlatform.vue);
+            }
+        }).timeout(60000);
+
+        it.skip('should delete project', async () => {
+            const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
+            const result = await projectsApi.DeleteProject('gaterking', 'ut0-v5');
+            assert(result.success === true);
+        }).timeout(60000);
+
+        it.only('should upload file', async () => {
+            const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
+            await projectsApi.UploadProjectFiles('gaterking', 'testdemo-k0', 'test2', [
+                {
+                    dist: '',
+                    file: path.join(__dirname, '../../../sample/dist/js/app.7fe64a76.js'),
+                    header: '',
+                    name: 'app.7fe64a76.js',
+                }
+            ]);
+        }).timeout(20000);
     });
 });

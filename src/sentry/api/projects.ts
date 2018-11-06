@@ -1,6 +1,8 @@
+import FormData from 'form-data';
+import { fs } from 'mz';
 import {ApiBase} from './apiBase';
 import {request as axiosRequest} from './axiosRequest';
-import {IError, IHttpError, IProject, IProjectUpdate, IReleaseFile} from './types';
+import { Types } from './index';
 /**
  * sentry api Teams
  */
@@ -9,8 +11,8 @@ export class Projects extends ApiBase {
     /**
      * List your Projects
      */
-    public async listProjects (): Promise<IProject[] | IHttpError> {
-        return axiosRequest<IProject[]>({
+    public async listProjects (): Promise<Types.IHttpResponse<Types.IProject[]>> {
+        return axiosRequest<Types.IProject[]>({
             baseURL: this.baseUrl,
             headers: {
                 Authorization: this.authToken
@@ -24,8 +26,8 @@ export class Projects extends ApiBase {
      */
     public async UpdateProject (organizationSlug: string,
                                 projectSlug: string,
-                                updateData: IProjectUpdate) {
-        return axiosRequest<IProject>({
+                                updateData: Types.IProjectUpdate): Promise<Types.IHttpResponse<Types.IProject>> {
+        return axiosRequest<Types.IProject>({
             baseURL: this.baseUrl,
             data: updateData,
             headers: {
@@ -40,8 +42,8 @@ export class Projects extends ApiBase {
      * Delete a Project
      */
     public async DeleteProject (organizationSlug: string,
-                                projectSlug: string) {
-        return axiosRequest<IError>({
+                                projectSlug: string): Promise<Types.IHttpResponse<any>> {
+        return axiosRequest<Types.IHttpResponse<any>>({
             baseURL: this.baseUrl,
             headers: {
                 Authorization: this.authToken
@@ -58,11 +60,15 @@ export class Projects extends ApiBase {
     public async UploadProjectFiles (organizationSlug: string,
                                      projectSlug: string,
                                      version: string,
-                                     files: IReleaseFile[]) {
+                                     files: Types.IReleaseFile[]) {
         for (const file of files) {
-            await axiosRequest<IError>({
+            const fileFormData = new FormData();
+            fileFormData.append('name', file.name);
+            fileFormData.append('file', fs.createReadStream(file.file));
+            debugger;
+            await axiosRequest<Types.IUploadFileResult>({
                 baseURL: this.baseUrl,
-                data: file,
+                data: fileFormData,
                 headers: {
                     Authorization: this.authToken
                 },

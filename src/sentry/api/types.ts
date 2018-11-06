@@ -1,7 +1,9 @@
-export interface IHttpError {
+export interface IHttpResponse<T> {
     code: number;
+    success: boolean;
     text: string;
-    data?: {
+    data?: T;
+    errorData?: {
         detail: string
     };
 }
@@ -50,4 +52,10 @@ export interface IReleaseFile {
     dist: string;
     file: string;
     header: string;
+}
+
+export interface IUploadFileResult {
+    id: string;
+    name: string;
+    sha1: string;
 }

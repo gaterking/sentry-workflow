@@ -1,10 +1,11 @@
 import {Organizations} from './organizations';
 import {Projects} from './projects';
 import {Teams} from './teams';
-import {EnumPlatform, IError, IHttpError, IProject, IProjectUpdate, IReleaseFile, IReleaseParam } from './types';
+import * as Types from './types';
 export {
     Teams,
     Organizations,
     Projects,
-    IError, IHttpError, IProject, IProjectUpdate, EnumPlatform, IReleaseParam, IReleaseFile
+    // IError, IHttpResponse, IProject, IProjectUpdate, EnumPlatform, IReleaseParam, IReleaseFile
+    Types
 };

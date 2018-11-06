@@ -1,6 +1,6 @@
 import cli from '@sentry/cli';
 import * as helper from '@sentry/cli/js/helper';
-import {EnumPlatform, IHttpError, IProject, Projects, Teams} from 'sentry/api';
+import {Projects, Teams, Types} from 'sentry/api';
 import {buildSourceURL} from 'sourcemapHelper';
 import * as SentryCliPlugin from 'types/SentryCliPlugin';
 /**
@@ -10,7 +10,10 @@ class SentryWorkflow {
     private cliInstance: cli;
     private configFile: string;
     private apiConfigFile: string;
-    constructor (options: SentryCliPlugin.IWorkflowOption = {
+    /**
+     * 获取当前版本号
+     */
+    public constructor (options: SentryCliPlugin.IWorkflowOption = {
         apiConfigFile: './sentryapi.config.js',
         configFile: './.sentryclirc'
     }) {
@@ -33,16 +36,15 @@ class SentryWorkflow {
                              teamSlug: string,
                              projectName: string,
                              projectSlug: string,
-                             platform: EnumPlatform = EnumPlatform.js)
+                             platform: Types.EnumPlatform = Types.EnumPlatform.js)
     : Promise<string|void> {
         const teamsApi = new Teams(this.apiConfigFile);
-        let projectList = await teamsApi.listProjects(orgSlug, teamSlug);
-        if (!(projectList instanceof Array)) {
-            projectList = projectList as IHttpError;
-            return projectList.data ?  projectList.data.detail : projectList.text;
+        const projectListResponse = await teamsApi.listProjects(orgSlug, teamSlug);
+        if (!projectListResponse.success) {
+            return projectListResponse.errorData ?  projectListResponse.errorData.detail : projectListResponse.text;
         }
-        projectList = projectList as IProject[];
-        let targetProject: IProject | null = null;
+        const projectList = projectListResponse.data || [];
+        let targetProject: Types.IProject | null = null;
         for (const p of projectList) {
             if (p.slug === projectSlug) {
                 targetProject = p;
@@ -51,18 +53,25 @@ class SentryWorkflow {
         }
         if (!targetProject) {
             // 未建立项目
-            const newProject = await teamsApi.createNewProject(orgSlug, teamSlug, projectName, projectSlug);
-            if (newProject.hasOwnProperty('code')) {
-                return (newProject as IHttpError).text;
-            } else {
-                targetProject = newProject as IProject;
-                const projectsApi = new Projects(this.apiConfigFile);
-                targetProject = (await projectsApi.UpdateProject(orgSlug, targetProject.slug, {
-                    platform
-                })) as IProject;
+            const newProjecteResponse = await teamsApi.createNewProject(orgSlug, teamSlug, projectName, projectSlug);
+            if (!newProjecteResponse.success) {
+                return newProjecteResponse.errorData ? newProjecteResponse.errorData.detail : newProjecteResponse.text;
+            } else if (newProjecteResponse.data) {
+                targetProject = newProjecteResponse.data;
             }
         }
-        return;
+        if (targetProject) {
+            const projectsApi = new Projects(this.apiConfigFile);
+            const targetProjectResponse = (await projectsApi.UpdateProject(orgSlug, targetProject.slug, {
+                platform
+            }));
+            if (!targetProjectResponse.success) {
+                return targetProjectResponse.errorData ?
+                targetProjectResponse.errorData.detail : targetProjectResponse.text;
+            } else if (targetProjectResponse.data) {
+                targetProject = targetProjectResponse.data;
+                   }
+            }
     }
 
     /**
@@ -71,7 +80,7 @@ class SentryWorkflow {
      * @param include 待发布的目录
      * @param releaseVersion 版本号，如果没有关联git，需要手动指定版本
      */
-    public async start (release: SentryCliPlugin.IReleaseOption, releaseVersion: string = ''): Promise<void> {
+    public async start (release: SentryCliPlugin.IReleaseOption, releaseVersion: string = ''): Promise < void > {
         const waitForRelease: string = await buildSourceURL(release.include,
             release.sourceMapPath, release.publishBase, release.urlPrefix);
         const targetVersion: string = await this.getReleasePromise(releaseVersion);
@@ -87,34 +96,20 @@ class SentryWorkflow {
         });
         await this.cliInstance.releases.finalize(targetVersion);
     }
-
-    /**
-     * 通知sentry版本已经部署
-     * @param releaseVersion 版本号
-     * @param env 环境变量，相同的版本可以有不同的环境变量用于区分,prod/dev/test
-     */
-    public async deploy (releaseVersion: string, env: string): Promise<string> {
+    public deploy (releaseVersion: string, env: string): Promise < string > {
         return helper.execute(['releases', 'deploys', releaseVersion, 'new', '-e', `${env}`], false);
     }
-
-    /**
-     * 删除指定版本的文件
-     * @param releaseVersion 版本号
-     */
-    public async deleteAll (releaseVersion: string): Promise<void> {
-        helper.execute(['releases', 'files', releaseVersion, 'delete', '--all'], false);
+    public deleteAll (releaseVersion: string): Promise<void> {
+        return helper.execute(['releases', 'files', releaseVersion, 'delete', '--all'], false);
+    }
+public getReleasePromise (releaseVersion: string): Promise < string > {
+        return (releaseVersion
+            ?   Promise.resolve(releaseVersion)
+            : this.cliInstance.releases.proposeVersion()).then((version: string) => version.trim());
     }
 
     private getSentryCli (configFile: string): cli {
         return new cli(configFile || this.configFile);
-    }
-    /**
-     * 获取当前版本号
-     */
-    private async getReleasePromise (releaseVersion: string): Promise<string> {
-        return (releaseVersion
-            ? Promise.resolve(releaseVersion)
-            : this.cliInstance.releases.proposeVersion()).then((version: string) => version.trim());
     }
 }
 export { SentryWorkflow };

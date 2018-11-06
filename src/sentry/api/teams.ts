@@ -1,6 +1,6 @@
 import {ApiBase} from './apiBase';
 import {request as axiosRequest} from './axiosRequest';
-import {IHttpError, IProject} from './types';
+import { Types } from './index';
 /**
  * sentry api Teams
  */
@@ -11,9 +11,9 @@ export class Teams extends ApiBase {
      */
     public async listProjects (organizationSlug: string,
                                teamSlug: string
-    ): Promise<IProject[] | IHttpError> {
+    ): Promise<Types.IHttpResponse<Types.IProject[]>> {
         // return this.request<IListProjectsResponse[]>(`/api/0/teams/${organizationSlug}/${teamSlug}/projects/`);
-        return axiosRequest<IProject[]>({
+        return axiosRequest<Types.IProject[]>({
             baseURL: this.baseUrl,
             headers: {
                 Authorization: this.authToken
@@ -29,7 +29,7 @@ export class Teams extends ApiBase {
                                    teamSlug: string,
                                    name: string,
                                    slug?: string) {
-        return axiosRequest<IProject>({
+        return axiosRequest<Types.IProject>({
             baseURL: this.baseUrl,
             data: {
                 name,
