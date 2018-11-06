@@ -49,7 +49,10 @@ export interface IReleaseParam {
 
 export interface IReleaseFile {
     name: string;
-    dist: string;
+    /**
+     * 像是DISTRIBUTION字段，不清楚用途，保持空
+     */
+    dist?: string;
     file: string;
     header: string;
 }
@@ -58,4 +61,18 @@ export interface IUploadFileResult {
     id: string;
     name: string;
     sha1: string;
+}
+
+export interface IDeployParam {
+    environment: string;
+    /**
+     * 部署命名
+     */
+    name?: string;
+    /**
+     * the optional url that points to the deploy
+     */
+    url?: string;
+    dateStarted?: string;
+    dateFinished?: string;
 }

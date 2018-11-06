@@ -8,15 +8,57 @@ export class Releases extends ApiBase {
      * @param organizationSlug
      */
     public async createNewRelease (organizationSlug: string, releaseParam: Types.IReleaseParam)
+        : Promise<Types.IHttpResponse<Types.IProject[]>> {
+        return axiosRequest<Types.IProject[]>({
+            baseURL: this.baseUrl,
+            data: releaseParam,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'POST',
+            url: `/api/0/organizations/${organizationSlug}/releases/`,
+        });
+    }
+
+    /**
+     * Create a Deploy
+     * @param organizationSlug
+     * @param version
+     */
+    public async createDeploy (organizationSlug: string, version: string, deployParam: Types.IDeployParam)
     : Promise<Types.IHttpResponse<Types.IProject[]>> {
-            return axiosRequest<Types.IProject[]>({
-                baseURL: this.baseUrl,
-                data: releaseParam,
-                headers: {
-                    Authorization: this.authToken
-                },
-                method: 'POST',
-                url: `/api/0/organizations/${organizationSlug}/releases/`,
-            });
-        }
+        return axiosRequest<Types.IProject[]>({
+            baseURL: this.baseUrl,
+            data: deployParam,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'POST',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/deploys`,
+        });
+    }
+
+    /**
+     * Delete an Organization Release's File
+     * @param organizationSlug
+     * @param version
+     * @param fileId
+     */
+    public async deleteReleaseFile (organizationSlug: string, version: string, fileId: string)
+    : Promise<Types.IHttpResponse<Types.IProject[]>> {
+        return axiosRequest<Types.IProject[]>({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'DELETE',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/files/${fileId}/`,
+        });
+    }
+    /**
+     * Update an Organization's Release
+     */
+    public async updateRelease (organizationSlug: string, version: string): Promise<void> {
+        return;
+    }
 }

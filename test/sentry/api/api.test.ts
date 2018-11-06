@@ -5,7 +5,7 @@ import assert = require('assert');
 import path from 'path';
 import {Types} from 'sentry/api';
 import {ApiBase} from 'sentry/api/apiBase';
-import {Organizations, Projects, Teams} from 'sentry/api/index';
+import {Organizations, Projects, Releases, Teams} from 'sentry/api/index';
 import { EnumPlatform } from 'sentry/api/types';
 
 const rcFile = './sentryapi_mock.config.js';
@@ -78,16 +78,22 @@ describe('sentry.api', () => {
             assert(result.success === true);
         }).timeout(60000);
 
-        it.only('should upload file', async () => {
+        it.skip('should upload file', async () => {
             const projectsApi: Projects = new Projects(path.join(__dirname, rcFile));
-            await projectsApi.UploadProjectFiles('gaterking', 'testdemo-k0', 'test2', [
+            const result = await projectsApi.UploadProjectFiles('gaterking', 'testdemo-k0', 'test2', [
                 {
-                    dist: '',
                     file: path.join(__dirname, '../../../sample/dist/js/app.7fe64a76.js'),
-                    header: '',
-                    name: 'app.7fe64a76.js',
+                    header: 'Content-Type:text/plain; encoding=utf-8',
+                    name: '~/hd/all3/18108-lock-selector/js/app.7fe64a76.js',
                 }
             ]);
+            assert(result.length > 0);
+        }).timeout(20000);
+
+        it.only('should delete file', async () => {
+            const releasesApi: Releases = new Releases(path.join(__dirname, rcFile));
+            const result = await releasesApi.deleteReleaseFile('gaterking', 'test2', '161952311');
+            assert(result.success);
         }).timeout(20000);
     });
 });

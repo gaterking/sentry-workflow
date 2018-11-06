@@ -6,7 +6,6 @@ import { Types } from './index';
 /**
  * sentry api Teams
  */
-
 export class Projects extends ApiBase {
     /**
      * List your Projects
@@ -60,21 +59,52 @@ export class Projects extends ApiBase {
     public async UploadProjectFiles (organizationSlug: string,
                                      projectSlug: string,
                                      version: string,
-                                     files: Types.IReleaseFile[]) {
+                                     files: Types.IReleaseFile[]): Promise<Types.IUploadFileResult[]> {
+        const results: Types.IUploadFileResult[] = [];
         for (const file of files) {
             const fileFormData = new FormData();
+            fileFormData.append('header ', file.header);
+            fileFormData.append('dist', file.dist || '');
             fileFormData.append('name', file.name);
-            fileFormData.append('file', fs.createReadStream(file.file));
-            debugger;
-            await axiosRequest<Types.IUploadFileResult>({
+            fileFormData.append('file', fs.readFileSync(file.file).toString(), {
+                filename: file.name,
+            });
+            // const metadata = {
+            //     header: file.header,
+            //     name: file.name
+            // };
+            // const boundary = 'a00872e0400948cbba6812a0f09f6ba2';
+            // // tslint:disable-next-line:max-line-length
+            // let data = '';
+            // tslint:disable-next-line:max-line-length
+            // const testData = `--a00872e0400948cbba6812a0f09f6ba2\r\nContent-Disposition: form-data; name=\"header\"\r\n\r\nContent-Type:text/plain; encoding=utf-8\r\n--a00872e0400948cbba6812a0f09f6ba2\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n/demo/hello.py\r\n--a00872e0400948cbba6812a0f09f6ba2\r\nContent-Disposition: form-data; name=\"file\"; filename=\"hello.py\"\r\n\r\nprint \"Hello World!\"\r\n--a00872e0400948cbba6812a0f09f6ba2--\r\n`;
+            // for (const i in metadata) {
+            //     if ({}.hasOwnProperty.call(metadata, i)) {
+            //         data += '--' + boundary + '\r\n';
+            //         // Content-Type: application/javascript\r\n\r\n
+            //         data += 'Content-Disposition: form-data; name="' + i + '"; \r\n\r\n' + metadata[i] + '\r\n';
+            //     }
+            // }
+            // data += '--' + boundary + '\r\n';
+            // // tslint:disable-next-line:max-line-length
+            // tslint:disable-next-line:max-line-length
+            // data += 'Content-Disposition: form-data; name="file"; filename="' + file.name + '\r\n\Content-Type: application/javascriptr\r\n\r\n';
+            // data +=  fs.readFileSync(file.file).toString() + '\r\n';
+            // data += '--' + boundary + '--\r\n';
+            const uploadResult = await axiosRequest<Types.IUploadFileResult>({
                 baseURL: this.baseUrl,
                 data: fileFormData,
                 headers: {
-                    Authorization: this.authToken
+                    'Authorization': this.authToken,
+                    'Content-Type': 'multipart/form-data;' + `boundary=${fileFormData.getBoundary()}`
                 },
                 method: 'POST',
                 url: `/api/0/projects/${organizationSlug}/${projectSlug}/releases/${version}/files/`
             });
+            if (uploadResult.success) {
+                results.push(uploadResult.data as Types.IUploadFileResult);
+            }
         }
+        return results;
     }
 }
