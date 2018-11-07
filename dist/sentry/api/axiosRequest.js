@@ -1,7 +1,11 @@
-import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
-import {IHttpResponse} from './types';
-async function request<T> (options: AxiosRequestConfig): Promise<IHttpResponse<T>> {
-    return axios.request<T>(options).then((value: AxiosResponse<T>) => {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios_1 = __importDefault(require("axios"));
+async function request(options) {
+    return axios_1.default.request(options).then((value) => {
         return {
             code: value.status,
             data: value.data,
@@ -9,7 +13,6 @@ async function request<T> (options: AxiosRequestConfig): Promise<IHttpResponse<T
             text: value.statusText
         };
     }).catch((err) => {
-        // tslint:disable-next-line:no-console
         return {
             code: err.response.status,
             errorData: err.response.data,
@@ -18,6 +21,4 @@ async function request<T> (options: AxiosRequestConfig): Promise<IHttpResponse<T
         };
     });
 }
-export {
-    request
-};
+exports.request = request;

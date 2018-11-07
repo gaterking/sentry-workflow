@@ -1,10 +1,23 @@
 // import cli from '@sentry/cli';
-import * as helper from '@sentry/cli/js/helper';
+// import * as helper from '@sentry/cli/js/helper';
 import find from 'find';
-import { resolve } from 'mz/dns';
-import {Projects, Releases, Teams , Types} from 'sentry/api';
-import {buildSourceURL} from 'sourcemapHelper';
-import * as SentryCliPlugin from 'types/SentryCliPlugin';
+import path from 'path';
+import {Projects, Releases, Teams , Types} from './sentry/api';
+import { IReleaseFile } from './sentry/api/types';
+import {buildSourceURL} from './sourcemapHelper';
+import * as SentryCliPlugin from './types/SentryCliPlugin';
+interface IFileInfo {
+    /**
+     * 原文件基路径
+     */
+    originBase: string;
+
+    /**
+     * 原文件路径
+     */
+    orignFile: string;
+}
+
 /**
  * sentry cli发布流程封装
  */
@@ -80,16 +93,18 @@ class SentryWorkflow {
      *
      * @param include 待发布的目录
      * @param releaseVersion 版本号，如果没有关联git，需要手动指定版本
+     * @returns 是否发布成功
      */
-    public async start (release: SentryCliPlugin.IReleaseOption, releaseVersion: string = ''): Promise <boolean> {
+    public async start (release: SentryCliPlugin.IReleaseOption, releaseVersion: string): Promise <boolean> {
         const waitForRelease: string = await buildSourceURL(release.include,
             release.sourceMapPath, release.publishBase, release.urlPrefix);
         const targetVersion: string = await this.getReleasePromise(releaseVersion);
+        const uploadPrfix: string = release.urlPrefix.startsWith('http://') ?
+         release.urlPrefix :
+        `~${release.urlPrefix || '/'}`;
+        // 使用sentry cli
         // await this.cliInstance.releases.new(targetVersion);
         // // tslint:disable-next-line:no-http-string
-        // const uploadPrfix: string = release.urlPrefix.startsWith('http://') ?
-        //  release.urlPrefix :
-        // `~${release.urlPrefix || '/'}`;
         // await this.cliInstance.releases.uploadSourceMaps(targetVersion, {
         //     include: [waitForRelease],
         //     urlPrefix: uploadPrfix,
@@ -105,38 +120,75 @@ class SentryWorkflow {
         });
         if (!cnrResult.success && cnrResult.errorData) {
             // tslint:disable-next-line:no-console
-            console.error(cnrResult.errorData.detail);
+            console.error(cnrResult.errorData);
             return false;
         }
         const projectsApi = new Projects(this.apiConfigFile);
-        const upfResult = await projectsApi.UploadProjectFiles(release.org, release.project, targetVersion,
-            (await this.findFiles([waitForRelease])).map((file) => {
-                return  {
-                    file,
-                    header: '',
-                    name: ''
-                };
-            })
-        );
+        const filesToUpload: IReleaseFile[] = (await this.findFiles([waitForRelease])).map((file) => {
+            return {
+                file: file.orignFile,
+                header: 'Content-Type:text/plain; encoding=utf-8',
+                name: path.join(uploadPrfix, file.orignFile.replace(file.originBase, '')).replace(/\\/g, '\/')
+            };
+        });
+        const upfResult = await projectsApi.UploadProjectFiles(release.org,
+            release.project,
+            targetVersion,
+            filesToUpload);
         return true;
         // releasesApi.updateRelease()
     }
-    public deploy (releaseVersion: string, env: string): Promise < string > {
-        return helper.execute(['releases', 'deploys', releaseVersion, 'new', '-e', `${env}`], false);
+    public async deploy (org: string, releaseVersion: string, env: string): Promise<boolean> {
+        // return helper.execute(['releases', 'deploys', releaseVersion, 'new', '-e', `${env}`], false);
+        const releasesApi =  new Releases(this.apiConfigFile);
+        const deployResult = await releasesApi.createDeploy(org, releaseVersion, {
+            environment: env
+        });
+        return deployResult.success;
     }
-    public deleteAll (releaseVersion: string): Promise<void> {
-        return helper.execute(['releases', 'files', releaseVersion, 'delete', '--all'], false);
+    /**
+     * 删除指定版本所有文件
+     * @param org
+     * @param releaseVersion
+     */
+    public async deleteVersionFiles (org: string, releaseVersion: string): Promise<boolean> {
+        // return helper.execute(['releases', 'files', releaseVersion, 'delete', '--all'], false);
+        const releasesApi =  new Releases(this.apiConfigFile);
+        // const re = new Projects(this.)
+        const listFilesResult = await releasesApi.listReleaseFiles(org, releaseVersion);
+        let files: IReleaseFile[] = [];
+        if (listFilesResult && listFilesResult.data) {
+            files = listFilesResult.data;
+        }
+        for (const file of files) {
+            const fileDeleteResult = await releasesApi.deleteReleaseFile(org, releaseVersion, file.id || '');
+        }
+        return true;
     }
 
-    private findFiles (includes: string[]): Promise<string[]> {
+    /**
+     * 删除版本
+     * @param org
+     * @param releaseVersion
+     */
+    public async deleteRelease (org: string, releaseVersion: string): Promise<boolean> {
+        const releasesApi =  new Releases(this.apiConfigFile);
+        const deleteResult = await releasesApi.DeleteRelease(org, releaseVersion);
+        return deleteResult.success;
+    }
+
+    private findFiles (includes: string[]): Promise<IFileInfo[]> {
         // tslint:disable-next-line:no-shadowed-variable
         return new Promise((resolve) => {
-            const files: string[] = [];
+            const files: IFileInfo[] = [];
             for (const folder of includes) {
-                find.eachfile(`.js|.js.map$`, folder, (file) => {
-                    files.push(file);
+                const filesInFolder = find.fileSync(/\.(js|js\.map)$/, folder);
+                filesInFolder.forEach((file) => {
+                    files.push({
+                        originBase: folder,
+                        orignFile: file
+                    });
                 });
-                return files;
             }
             resolve(files);
         });

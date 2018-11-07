@@ -1,6 +1,7 @@
 import {ApiBase} from './apiBase';
 import {request as axiosRequest} from './axiosRequest';
 import { Types } from './index';
+import { IHttpResponse } from './types';
 
 export class Releases extends ApiBase {
     /**
@@ -9,6 +10,8 @@ export class Releases extends ApiBase {
      */
     public async createNewRelease (organizationSlug: string, releaseParam: Types.IReleaseParam)
         : Promise<Types.IHttpResponse<Types.IProject[]>> {
+        // tslint:disable-next-line:no-console
+        console.log(`\r\ncreate new release: ${organizationSlug} ${releaseParam.version}`);
         return axiosRequest<Types.IProject[]>({
             baseURL: this.baseUrl,
             data: releaseParam,
@@ -26,15 +29,32 @@ export class Releases extends ApiBase {
      * @param version
      */
     public async createDeploy (organizationSlug: string, version: string, deployParam: Types.IDeployParam)
-    : Promise<Types.IHttpResponse<Types.IProject[]>> {
-        return axiosRequest<Types.IProject[]>({
+        : Promise<Types.IHttpResponse<any>> {
+        return axiosRequest<any>({
             baseURL: this.baseUrl,
             data: deployParam,
             headers: {
                 Authorization: this.authToken
             },
             method: 'POST',
-            url: `/api/0/organizations/${organizationSlug}/releases/${version}/deploys`,
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/deploys/`,
+        });
+    }
+
+    /**
+     * List a Release's Deploys
+     * @param organizationSlug
+     * @param version
+     */
+    public async ListDeploys (organizationSlug: string, version: string)
+        : Promise<Types.IHttpResponse<any>> {
+        return axiosRequest<any>({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'GET',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/deploys/`,
         });
     }
 
@@ -45,8 +65,8 @@ export class Releases extends ApiBase {
      * @param fileId
      */
     public async deleteReleaseFile (organizationSlug: string, version: string, fileId: string)
-    : Promise<Types.IHttpResponse<Types.IProject[]>> {
-        return axiosRequest<Types.IProject[]>({
+    : Promise<Types.IHttpResponse<any>> {
+        return axiosRequest<any>({
             baseURL: this.baseUrl,
             headers: {
                 Authorization: this.authToken
@@ -66,6 +86,37 @@ export class Releases extends ApiBase {
                 Authorization: this.authToken
             },
             method: 'PUT',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/`,
+        });
+    }
+
+    /**
+     * List an Organization Release's Files
+     *
+     */
+    public async listReleaseFiles (organizationSlug: string, version: string)
+        : Promise<IHttpResponse<Types.IReleaseFile[]>> {
+        return axiosRequest<Types.IReleaseFile[]>({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'GET',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/files/`,
+        });
+    }
+
+    /**
+     * Delete an Organization's Release
+     *
+     */
+    public async DeleteRelease (organizationSlug: string, version: string) {
+        return axiosRequest<any>({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'DELETE',
             url: `/api/0/organizations/${organizationSlug}/releases/${version}/`,
         });
     }

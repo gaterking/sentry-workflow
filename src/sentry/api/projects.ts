@@ -1,3 +1,4 @@
+import _cliProgress from 'cli-progress';
 import FormData from 'form-data';
 import { fs } from 'mz';
 import {ApiBase} from './apiBase';
@@ -61,7 +62,15 @@ export class Projects extends ApiBase {
                                      version: string,
                                      files: Types.IReleaseFile[]): Promise<Types.IUploadFileResult[]> {
         const results: Types.IUploadFileResult[] = [];
+        const uploadBar = new _cliProgress.Bar({
+            format: 'uploading [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}'
+        }, _cliProgress.Presets.shades_classic);
+        uploadBar.start(files.length, 0);
+        let fileIndex = 0;
         for (const file of files) {
+            // tslint:disable-next-line:no-console
+            console.log(`\r\nuploading: ${file.file}`);
+            uploadBar.update(fileIndex + 1);
             const fileFormData = new FormData();
             fileFormData.append('header ', file.header);
             fileFormData.append('dist', file.dist || '');
@@ -104,7 +113,11 @@ export class Projects extends ApiBase {
             if (uploadResult.success) {
                 results.push(uploadResult.data as Types.IUploadFileResult);
             }
+            // tslint:disable-next-line:no-console
+            console.log(`\r\nuploaded: ${uploadResult.success ? 'success' : uploadResult.text}`);
+            fileIndex = fileIndex + 1;
         }
+        uploadBar.stop();
         return results;
     }
 }

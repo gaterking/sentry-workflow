@@ -1,12 +1,6 @@
 import { ApiBase } from './apiBase';
-interface IListProjectsResponse {
-    dateCreated: string;
-    name: string;
-}
+import { Types } from './index';
 export declare class Teams extends ApiBase {
-    /**
-     * 获取项目列表
-     */
-    listProjectsByTeam(org: string, team: string): Promise<IListProjectsResponse[] | void>;
+    listProjects(organizationSlug: string, teamSlug: string): Promise<Types.IHttpResponse<Types.IProject[]>>;
+    createNewProject(organizationSlug: string, teamSlug: string, name: string, slug?: string): Promise<Types.IHttpResponse<Types.IProject>>;
 }
-export {};

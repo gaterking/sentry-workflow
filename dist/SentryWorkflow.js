@@ -2,69 +2,123 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const cli_1 = __importDefault(require("@sentry/cli"));
-const helper = __importStar(require("@sentry/cli/js/helper"));
+const find_1 = __importDefault(require("find"));
+const path_1 = __importDefault(require("path"));
+const api_1 = require("./sentry/api");
 const sourcemapHelper_1 = require("./sourcemapHelper");
-/**
- * sentry cli发布流程封装
- */
 class SentryWorkflow {
-    constructor(options = { configFile: './.sentryclirc' }) {
+    constructor(options = {
+        apiConfigFile: './sentryapi.config.js',
+        configFile: './.sentryclirc'
+    }) {
         this.configFile = options.configFile;
-        this.cliInstance = this.getSentryCli(this.configFile);
+        this.apiConfigFile = options.apiConfigFile;
     }
-    /**
-     * 启动一次发布
-     *
-     * @param include 待发布的目录
-     * @param releaseVersion 版本号，如果没有关联git，需要手动指定版本
-     */
-    async start(release, releaseVersion = '') {
+    async newProject(orgSlug, teamSlug, projectName, projectSlug, platform = api_1.Types.EnumPlatform.js) {
+        const teamsApi = new api_1.Teams(this.apiConfigFile);
+        const projectListResponse = await teamsApi.listProjects(orgSlug, teamSlug);
+        if (!projectListResponse.success) {
+            return projectListResponse.errorData ? projectListResponse.errorData.detail : projectListResponse.text;
+        }
+        const projectList = projectListResponse.data || [];
+        let targetProject = null;
+        for (const p of projectList) {
+            if (p.slug === projectSlug) {
+                targetProject = p;
+                break;
+            }
+        }
+        if (!targetProject) {
+            const newProjecteResponse = await teamsApi.createNewProject(orgSlug, teamSlug, projectName, projectSlug);
+            if (!newProjecteResponse.success) {
+                return newProjecteResponse.errorData ? newProjecteResponse.errorData.detail : newProjecteResponse.text;
+            }
+            else if (newProjecteResponse.data) {
+                targetProject = newProjecteResponse.data;
+            }
+        }
+        if (targetProject) {
+            const projectsApi = new api_1.Projects(this.apiConfigFile);
+            const targetProjectResponse = (await projectsApi.UpdateProject(orgSlug, targetProject.slug, {
+                platform
+            }));
+            if (!targetProjectResponse.success) {
+                return targetProjectResponse.errorData ?
+                    targetProjectResponse.errorData.detail : targetProjectResponse.text;
+            }
+            else if (targetProjectResponse.data) {
+                targetProject = targetProjectResponse.data;
+            }
+        }
+    }
+    async start(release, releaseVersion) {
         const waitForRelease = await sourcemapHelper_1.buildSourceURL(release.include, release.sourceMapPath, release.publishBase, release.urlPrefix);
         const targetVersion = await this.getReleasePromise(releaseVersion);
-        await this.cliInstance.releases.new(targetVersion);
-        // tslint:disable-next-line:no-http-string
-        const uploadPrfix = release.urlPrefix.startsWith('http://') ? release.urlPrefix : `~${release.urlPrefix || '/'}`;
-        await this.cliInstance.releases.uploadSourceMaps(targetVersion, {
-            include: [waitForRelease],
-            urlPrefix: uploadPrfix,
-            validate: true
+        const uploadPrfix = release.urlPrefix.startsWith('http://') ?
+            release.urlPrefix :
+            `~${release.urlPrefix || '/'}`;
+        const releasesApi = new api_1.Releases(this.apiConfigFile);
+        const cnrResult = await releasesApi.createNewRelease(release.org, {
+            projects: [release.project],
+            version: targetVersion,
         });
-        await this.cliInstance.releases.finalize(targetVersion);
+        if (!cnrResult.success && cnrResult.errorData) {
+            console.error(cnrResult.errorData);
+            return false;
+        }
+        const projectsApi = new api_1.Projects(this.apiConfigFile);
+        const filesToUpload = (await this.findFiles([waitForRelease])).map((file) => {
+            return {
+                file: file.orignFile,
+                header: 'Content-Type:text/plain; encoding=utf-8',
+                name: path_1.default.join(uploadPrfix, file.orignFile.replace(file.originBase, '')).replace(/\\/g, '\/')
+            };
+        });
+        const upfResult = await projectsApi.UploadProjectFiles(release.org, release.project, targetVersion, filesToUpload);
+        return true;
     }
-    /**
-     * 通知sentry版本已经部署
-     * @param releaseVersion 版本号
-     * @param env 环境变量，相同的版本可以有不同的环境变量用于区分,prod/dev/test
-     */
-    async deploy(releaseVersion, env) {
-        return helper.execute(['releases', 'deploys', releaseVersion, 'new', '-e', `${env}`], false);
+    async deploy(org, releaseVersion, env) {
+        const releasesApi = new api_1.Releases(this.apiConfigFile);
+        const deployResult = await releasesApi.createDeploy(org, releaseVersion, {
+            environment: env
+        });
+        return deployResult.success;
     }
-    /**
-     * 删除指定版本的文件
-     * @param releaseVersion 版本号
-     */
-    async deleteAll(releaseVersion) {
-        helper.execute(['releases', 'files', releaseVersion, 'delete', '--all'], false);
+    async deleteVersionFiles(org, releaseVersion) {
+        const releasesApi = new api_1.Releases(this.apiConfigFile);
+        const listFilesResult = await releasesApi.listReleaseFiles(org, releaseVersion);
+        let files = [];
+        if (listFilesResult && listFilesResult.data) {
+            files = listFilesResult.data;
+        }
+        for (const file of files) {
+            const fileDeleteResult = await releasesApi.deleteReleaseFile(org, releaseVersion, file.id || '');
+        }
+        return true;
     }
-    getSentryCli(configFile) {
-        return new cli_1.default(configFile || this.configFile);
+    async deleteRelease(org, releaseVersion) {
+        const releasesApi = new api_1.Releases(this.apiConfigFile);
+        const deleteResult = await releasesApi.DeleteRelease(org, releaseVersion);
+        return deleteResult.success;
     }
-    /**
-     * 获取当前版本号
-     */
-    async getReleasePromise(releaseVersion) {
-        return (releaseVersion
-            ? Promise.resolve(releaseVersion)
-            : this.cliInstance.releases.proposeVersion()).then((version) => { return version.trim(); });
+    findFiles(includes) {
+        return new Promise((resolve) => {
+            const files = [];
+            for (const folder of includes) {
+                const filesInFolder = find_1.default.fileSync(/\.(js|js\.map)$/, folder);
+                filesInFolder.forEach((file) => {
+                    files.push({
+                        originBase: folder,
+                        orignFile: file
+                    });
+                });
+            }
+            resolve(files);
+        });
+    }
+    getReleasePromise(releaseVersion) {
+        return Promise.resolve(releaseVersion);
     }
 }
 exports.SentryWorkflow = SentryWorkflow;

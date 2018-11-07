@@ -1,13 +1,8 @@
-/**
- * Sentry API基类
- */
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { IApiInfo, IHttpResponse } from './types';
 export declare class ApiBase {
-    protected authToken: string;
-    private axiosInstance;
+    authToken: string;
+    baseUrl: string;
     private conf;
-    constructor(authToken: string, host: string, confFile?: string);
-    protected request<T>(axiosConfig: AxiosRequestConfig): Promise<T | void>;
-    protected handleResponse<T>(value: AxiosResponse<T>): T | void;
-    private loadConfig;
+    constructor(confFile?: string);
+    apiInfo(): Promise<IHttpResponse<IApiInfo>>;
 }

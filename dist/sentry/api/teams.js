@@ -1,22 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const apiBase_1 = require("./apiBase");
-/**
- * sentry api Teams
- */
-const listProjectsUrl = '/api/0/teams/{organization_slug}/{team_slug}/projects/';
+const axiosRequest_1 = require("./axiosRequest");
 class Teams extends apiBase_1.ApiBase {
-    /**
-     * 获取项目列表
-     */
-    async listProjectsByTeam(org, team) {
-        return this.request({
-            url: listProjectsUrl,
-            data: {
-                organization_slug: org,
-                team_slug: team
+    async listProjects(organizationSlug, teamSlug) {
+        return axiosRequest_1.request({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
             },
-            method: 'GET'
+            url: `/api/0/teams/${organizationSlug}/${teamSlug}/projects/`,
+        });
+    }
+    async createNewProject(organizationSlug, teamSlug, name, slug) {
+        return axiosRequest_1.request({
+            baseURL: this.baseUrl,
+            data: {
+                name,
+                slug
+            },
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'POST',
+            url: `/api/0/teams/${organizationSlug}/${teamSlug}/projects/`
         });
     }
 }

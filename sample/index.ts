@@ -3,7 +3,7 @@
  */
 import path from 'path';
 import {SentryWorkflow} from '../src/SentryWorkflow';
-const wf: SentryWorkflow = new SentryWorkflow({configFile: './.sentryclirc'});
+const wf: SentryWorkflow = new SentryWorkflow();
 
 // wf.start({
 //             include: ['js'],

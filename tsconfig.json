@@ -8,8 +8,9 @@
     "outDir": "./dist/",
     "strict": true,
     "noImplicitAny": false,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "baseUrl": "./src",
+    "removeComments": true,
     "paths": {
       "*": [
         "*"

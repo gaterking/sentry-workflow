@@ -90,9 +90,15 @@ describe('sentry.api', () => {
             assert(result.length > 0);
         }).timeout(20000);
 
-        it.only('should delete file', async () => {
+        it.skip('should delete file', async () => {
             const releasesApi: Releases = new Releases(path.join(__dirname, rcFile));
             const result = await releasesApi.deleteReleaseFile('gaterking', 'test2', '161952311');
+            assert(result.success);
+        }).timeout(20000);
+
+        it.skip('should list deploys', async () => {
+            const releasesApi: Releases = new Releases(path.join(__dirname, rcFile));
+            const result = await releasesApi.ListDeploys('gaterking', 'test3');
             assert(result.success);
         }).timeout(20000);
     });

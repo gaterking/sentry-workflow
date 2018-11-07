@@ -4,14 +4,14 @@
 
 ## Installation
 ```bash
-npm install sentry-workflow
+npm install @fe-sentry/sentry-workflow --save-dev
 ```
 
 ## Usage
-项目根目录新建一份[.sentryclirc](https://docs.sentry.io/learn/cli/configuration/)的配置文件，用于配置sentry相关信息
+~~项目根目录新建一份[.sentryclirc](https://docs.sentry.io/learn/cli/configuration/)的配置文件，用于配置sentry cli相关信息~~
 
 ```bash
-# .sentryclirc
+# .sentryclirc 该方式已废弃，请使用.sentryapi.config.js
 [defaults]
 url=http://fetrack.mail.163.com
 org=fee
@@ -20,12 +20,24 @@ project=sentry-demo
 [auth]
 token=24f18b37d23042cab3601e97c53915cca945ed5c1cff4d1ebdf0ae2
 ```
+
+项目根目录新建一份.sentryapi.config.js的配置文件，用于配置sentry web api相关信息
+```javascript
+# .sentryapi.config.js
+module.exports = {
+    token: '93871506267c4f1ca15b3680a1915205aa5662e0193f45cd846367c6ef931355', // api key，非auth token
+    baseUrl: 'http://fetrack.mail.163.com'
+};
+```
+
 在sentry上创建发布版本，将待发布的代码上传关联到该版本
 ```javascript
-import {SentryWorkflow} from 'sentry-workflow';
+import {SentryWorkflow} from '@fe-sentry/sentry-workflow';
 var wf = new SentryWorkflow({configFile: './.sentryclirc'});
 
 wf.start({
+            org: 'fee',
+            project: 'mail',
             include: ['js'],
             sourceMapPath: 'sourcemap',
             publishBase: path.resolve(__dirname, 'dist'),
@@ -56,3 +68,6 @@ wf.start({
 
 * releaseVersion <string> 部署的版本号
 * env <string> 环境变量
+
+### .newProject (orgSlug: string, teamSlug: string, projectName: string, projectSlug: string, platform: Types.EnumPlatform = Types.EnumPlatform.js)
+创建新的项目
