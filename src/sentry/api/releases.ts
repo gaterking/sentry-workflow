@@ -58,7 +58,15 @@ export class Releases extends ApiBase {
     /**
      * Update an Organization's Release
      */
-    public async updateRelease (organizationSlug: string, version: string): Promise<void> {
-        return;
+    public async updateRelease (organizationSlug: string, version: string)
+    : Promise<Types.IHttpResponse<Types.IOrgReleaseVersion>> {
+        return axiosRequest<Types.IOrgReleaseVersion>({
+            baseURL: this.baseUrl,
+            headers: {
+                Authorization: this.authToken
+            },
+            method: 'PUT',
+            url: `/api/0/organizations/${organizationSlug}/releases/${version}/`,
+        });
     }
 }

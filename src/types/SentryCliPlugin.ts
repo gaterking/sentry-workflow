@@ -12,6 +12,8 @@ export interface IWorkflowOption {
 }
 
 export interface IReleaseOption {
+    org: string;
+    project: string;
     /**
      * 待发布目录集合
      */

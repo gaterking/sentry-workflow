@@ -5,8 +5,7 @@ export class Organizations extends ApiBase {
     /**
      * List an Organization’s Projects
      */
-    public async listProjects (organizationSlug: string
-    ): Promise<IHttpResponse<IProject[]>> {
+    public async listProjects (organizationSlug: string): Promise<IHttpResponse<IProject[]>> {
         // return this.request<IListProjectsResponse[]>(`/api/0/teams/${organizationSlug}/${teamSlug}/projects/`);
         return axiosRequest<IProject[]>({
             baseURL: this.baseUrl,
