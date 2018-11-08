@@ -71,3 +71,5 @@ wf.start({
 
 ### .newProject (orgSlug: string, teamSlug: string, projectName: string, projectSlug: string, platform: Types.EnumPlatform = Types.EnumPlatform.js)
 创建新的项目
+
+## [发布流程](docs/Sentry版本流程.md)
