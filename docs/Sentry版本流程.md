@@ -73,12 +73,12 @@ Sentry支持多个平台的接入，例如普通的Web前端、Node、React Nati
 
 | SDK |  版本 |     |     |
 | --- | --- | --- | --- |
-| [@sentry/browser](https://docs.sentry.io/platforms/javascript/)  | 新 | 支持Vue、React等框架特性 | 体积较大(23K)，[异步Loader](https://docs.sentry.io/platforms/javascript/loader/)不支持独立部署的Sentry系统  |
-| [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 | Vue、React等框架错误需要手动接入 | 体积较小(15K)，支持异步加载 |
+| [@sentry/browser](https://docs.sentry.io/platforms/javascript/)  | 新 | 支持一些新的特性 | 体积较大(23K)，主要原因是模块化的打包导致大量utils代码重复，例如async、promise等<br/>[异步Loader](https://docs.sentry.io/platforms/javascript/loader/)不支持独立部署的Sentry系统<br>支持IE10以上  |
+| [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 |  | 体积较小(15K)，支持异步加载<br>支持IE8以上 |
 
-推荐流程
+#### @sentry/browser
 1. 使用强缓存CDN
-<script src="https://browser.sentry-cdn.com/4.2.3/bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://mimg.126.net/hd/lib/track/bundle-4.3.0.min.js" crossorigin="anonymous"></script>
 2. 尽快初始化Sentry
 ```javascript
 // 利用环境变量可以针对不同环境进行初始化
@@ -96,6 +96,24 @@ if (process.env.NODE_ENV === 'production') {
 ```
 3. 手动上报
 通过init之后，Sentry可以自动捕获异常并自动上报，同时Sentry也提供了其它[API](https://docs.sentry.io/clientdev/unified-api/)进行手动上报日志，常用的capture_exception(error) 和 capture_message(message, level)
+
+#### Raven
+1. 使用强缓存CDN
+<script src="https://mimg.127.net/hd/lib/track/raven-3.27.0.min.js"></script>
+2. 尽快初始化Sentry
+```javascript
+// 利用环境变量可以针对不同环境进行初始化
+if (process.env.NODE_ENV === 'production') {
+    // 仅在生成环境进行监控
+	Raven.config('http://449a0039d5864307b5207dd17b97e0d6@sentry.gztest.mail.163.com/2', {
+		release: `404_mobile@${process.env.version}`, // 版本号，与发布流程相匹配
+		environment: 'production', // 自定义环境，prod|test|t1|t2|dev|staging，与发布流程相匹配
+		sampleRate: 0.1 // 前端采样率，随机10%，0.1~1.0
+	}).install();
+}
+```
+3. 手动上报
+Raven库同样提供手动上传的[API](https://docs.sentry.io/clients/javascript/usage/)
 
 ### Node
 ```javascript
