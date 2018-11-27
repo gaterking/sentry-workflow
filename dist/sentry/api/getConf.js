@@ -9,7 +9,13 @@ function getConf(rcFile = '') {
     const { config = {} } = (rcFile ? explorer.loadSync(rcFile) : explorer.searchSync()) || {};
     const defaultConfig = {
         baseUrl: '',
-        token: ''
+        dsn: '',
+        libPath: '',
+        org: '',
+        projectName: '',
+        sampleRate: 0.1,
+        token: '',
+        useRaven: false
     };
     return Object.assign({}, defaultConfig, config);
 }

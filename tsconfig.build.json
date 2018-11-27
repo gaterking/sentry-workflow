@@ -66,7 +66,9 @@
       // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
     },
     "files": [
-      "src/SentryWorkflow.ts"
+      "src/SentryWorkflow.ts",
+    
+      "src/webpack-plugin/sentry-inject.ts"
     ],
     "include": [
       "src/**/*",

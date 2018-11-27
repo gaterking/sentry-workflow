@@ -7,6 +7,8 @@ const find_1 = __importDefault(require("find"));
 const path_1 = __importDefault(require("path"));
 const api_1 = require("./sentry/api");
 const sourcemapHelper_1 = require("./sourcemapHelper");
+const sentry_inject_1 = __importDefault(require("./webpack-plugin/sentry-inject"));
+exports.SentryInjectWebpackPlugin = sentry_inject_1.default;
 class SentryWorkflow {
     constructor(options = {
         apiConfigFile: './sentryapi.config.js',

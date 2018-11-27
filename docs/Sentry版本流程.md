@@ -69,7 +69,7 @@ Sentry系统域名
 Sentry支持多个平台的接入，例如普通的Web前端、Node、React Native，也对一些框架进行了集成支持[SDK](https://docs.sentry.io/platforms/)。
 
 ### Web前端
-目前官方存在新旧两个SDK
+目前官方存在新旧两个SDK，建议使用SentryInjectWebpackPlugin集成，特殊情况才使用以下的手动接入方式
 
 | SDK |  版本 |     |     |
 | --- | --- | --- | --- |

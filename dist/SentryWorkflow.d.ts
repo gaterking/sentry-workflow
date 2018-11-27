@@ -1,5 +1,6 @@
 import { Types } from './sentry/api';
 import * as SentryCliPlugin from './types/SentryCliPlugin';
+import SentryInjectWebpackPlugin from './webpack-plugin/sentry-inject';
 declare class SentryWorkflow {
     private configFile;
     private apiConfigFile;
@@ -12,4 +13,4 @@ declare class SentryWorkflow {
     private findFiles;
     private getReleasePromise;
 }
-export { SentryWorkflow };
+export { SentryWorkflow, SentryInjectWebpackPlugin };

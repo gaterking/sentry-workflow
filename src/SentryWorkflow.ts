@@ -6,6 +6,7 @@ import {Projects, Releases, Teams , Types} from './sentry/api';
 import { IReleaseFile } from './sentry/api/types';
 import {buildSourceURL} from './sourcemapHelper';
 import * as SentryCliPlugin from './types/SentryCliPlugin';
+import SentryInjectWebpackPlugin from './webpack-plugin/sentry-inject';
 interface IFileInfo {
     /**
      * 原文件基路径
@@ -210,4 +211,4 @@ class SentryWorkflow {
     //     return new cli(configFile || this.configFile);
     // }
 }
-export { SentryWorkflow };
+export {SentryWorkflow, SentryInjectWebpackPlugin};
