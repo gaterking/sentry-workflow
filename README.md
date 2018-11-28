@@ -55,26 +55,6 @@ wf.start({
 
 ```
 
-```javascript
-// webpack config
-plugins: [
-    //......
-    new HtmlWebpackPlugin({
-        // ......
-    }),
-    new SentryInjectWebpackPlugin({
-        env: 'prod', // 必需
-        version: '1.0.0' // 必需
-        // 其它配置和sentryapi.config.js一致，优先于sentryapi.config.js
-        useRaven: false,
-        dsn: '',
-        libPath: '',
-        sampleRate: 0.1;
-    }),
-    //......
-]
-```
-
 ## API
 ### .start({include, sourceMapPath, publishBase，urlPrefix}, releaseVersion): Promise<void>
 启动一个发布流程，完成release new, uploadSourceMaps, finalize，执行成功后会在publishBase生成sentry文件夹，改文件夹的内容会自动上传到sentry服务器，该流程不包含上传线上CDN的流程。

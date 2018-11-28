@@ -76,6 +76,30 @@ Sentry支持多个平台的接入，例如普通的Web前端、Node、React Nati
 | [@sentry/browser](https://docs.sentry.io/platforms/javascript/)  | 新 | 支持一些新的特性 | 体积较大(23K)，主要原因是模块化的打包导致大量utils代码重复，例如async、promise等<br/>[异步Loader](https://docs.sentry.io/platforms/javascript/loader/)不支持独立部署的Sentry系统<br>支持IE10以上  |
 | [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 |  | 体积较小(15K)，支持异步加载<br>支持IE8以上 |
 
+### SentryInjectWebpackPlugin
+``` html
+<!-- js:sentry -->
+```
+```javascript
+// webpack config，插件会自动注入初始化代码到定义的位置<!-- js:sentry -->
+plugins: [
+    //......
+    new HtmlWebpackPlugin({
+        // ......
+    }),
+    new SentryInjectWebpackPlugin({
+        env: 'prod', // 必需
+        version: '1.0.0' // 必需
+        // 其它配置和sentryapi.config.js一致，优先于sentryapi.config.js
+        useRaven: false,
+        dsn: '',
+        libPath: '',
+        sampleRate: 0.1;
+    }),
+    //......
+]
+```
+
 #### @sentry/browser
 1. 使用强缓存CDN
 <script src="https://mimg.126.net/hd/lib/track/bundle-4.3.0.min.js" crossorigin="anonymous"></script>
