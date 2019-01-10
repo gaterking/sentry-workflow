@@ -12,10 +12,10 @@ pipeline {
         }
         stage('Stage Init') {
             steps {
-                . ~/.nvm/nvm.sh
-                node --version
-                npm --version
-                npm install
+                sh '. ~/.nvm/nvm.sh'
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm install'
             }
         }
         stage('Build') {
