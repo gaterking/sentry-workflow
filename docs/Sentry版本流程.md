@@ -48,7 +48,9 @@ graph TD
 
 # 权限开通
 Sentry系统域名
+
 生产系统: http://fetrack.mail.163.com
+
 内网域名: http://sentry.gztest.mail.163.com
 
 用户开通
@@ -77,9 +79,7 @@ Sentry支持多个平台的接入，例如普通的Web前端、Node、React Nati
 | [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 |  | 体积较小(15K)，支持异步加载<br>支持IE8以上 |
 
 ### SentryInjectWebpackPlugin
-``` html
-<!-- js:sentry -->
-```
+
 ```javascript
 // webpack config，插件会自动注入初始化代码到定义的位置<!-- js:sentry -->
 plugins: [
@@ -104,6 +104,7 @@ plugins: [
 1. 使用强缓存CDN
 <script src="https://mimg.126.net/hd/lib/track/bundle-4.3.0.min.js" crossorigin="anonymous"></script>
 2. 尽快初始化Sentry
+
 ```javascript
 // 利用环境变量可以针对不同环境进行初始化
 if (process.env.NODE_ENV === 'production') {
