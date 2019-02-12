@@ -1,5 +1,5 @@
 # 概念
-```mermaid!
+```mermaid
 graph TD
     Org组织 --- Team团队
 	Org组织 --- Member成员
@@ -16,7 +16,7 @@ graph TD
 
 # 项目接入流程
 
-```mermaid!
+```mermaid
 graph TD
     Start[新项目] --> Org
 	Org[确定Org] --> Project
@@ -27,7 +27,7 @@ graph TD
 
 # Workflow
 ### 发布版本
-```mermaid!
+```mermaid
 graph TD
     ChangeVersion[修改代码Version] --> Build
 	Build[编译项目 生成js和js.map] --> CreateRelease
@@ -38,7 +38,7 @@ graph TD
 	Deploys[确认发布]
 ```
 ### 回滚版本
-```mermaid!
+```mermaid
 graph TD
     Rollback[回滚] --> 重新部署代码
 	重新部署代码 --> Finalize
@@ -167,7 +167,7 @@ Sentry的错误日志能够通过release、环境等进行筛选，依赖js、so
 |-- package.json
 ```
 下面是Sentry服务解析压缩混淆的文件的流程，其中红色边框的节点是关键步骤，尽量采用离线的方式查找文件
-```mermaid!
+```mermaid
 graph TD
     接收Event--> FindLocal
 	FindLocal{查找Sentry离线文件} -- N --> FindOnline
