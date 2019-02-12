@@ -1,6 +1,6 @@
 # SentryWorkflow
 ## Summary
-该库基于[sentry cli](https://github.com/getsentry/sentry-cli)进行封装，用于统一sentry版本发布流程
+该库基于[sentry cli](https://github.com/getsentry/sentry-cli)进行封装，用于统一sentry版本发布流程，能够自动生成js和sourcemap的对应目录，并发布上传到sentry后台，与业务代码的发布无关。
 
 ## Installation
 ```bash
