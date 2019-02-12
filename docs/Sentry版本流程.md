@@ -75,11 +75,14 @@ Sentry支持多个平台的接入，例如普通的Web前端、Node、React Nati
 
 | SDK |  版本 |     |     |
 | --- | --- | --- | --- |
-| [@sentry/browser](https://docs.sentry.io/platforms/javascript/)  | 新 | 支持一些新的特性 | 体积较大(23K)，主要原因是模块化的打包导致大量utils代码重复，例如async、promise等<br/>[异步Loader](https://docs.sentry.io/platforms/javascript/loader/)不支持独立部署的Sentry系统<br>支持IE10以上  |
-| [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 |  | 体积较小(15K)，支持异步加载<br>支持IE8以上 |
+| [@sentry/browser](https://docs.sentry.io/platforms/javascript/)  | 新 | 支持一些新的特性 | 体积较大(23K)，主要原因是模块化的打包导致大量utils代码重复，例如async、promise等<br/>[异步Loader](https://docs.sentry.io/platforms/javascript/loader/)不支持独立部署的Sentry系统<br>支持IE10以上<br>https://docs.sentry.io/error-reporting/quickstart/?platform=browser#next-steps |
+| [Raven](https://docs.sentry.io/clients/javascript/install/)  | 旧 |  | 体积较小(15K)，支持异步加载<br>支持IE8以上<br>https://docs.sentry.io/clients/javascript/usage/ |
 
 ### SentryInjectWebpackPlugin
-
+自动注入
+```html
+<!-- js:sentry -->
+```
 ```javascript
 // webpack config，插件会自动注入初始化代码到定义的位置<!-- js:sentry -->
 plugins: [
@@ -101,6 +104,7 @@ plugins: [
 ```
 
 #### @sentry/browser
+手动配置
 1. 使用强缓存CDN
 <script src="https://mimg.126.net/hd/lib/track/bundle-4.3.0.min.js" crossorigin="anonymous"></script>
 2. 尽快初始化Sentry
@@ -113,8 +117,12 @@ if (process.env.NODE_ENV === 'production') {
 		dsn: 'http://449a0039d5864307b5207dd17b97e0d6@sentry.gztest.mail.163.com/2', 
 		release: `404_mobile@1.5.0${process.env.version}`, // 版本号，与发布流程相匹配
 		environment: 'production', // 自定义环境，prod|test|t1|t2|dev|staging，与发布流程相匹配
-		sampleRate: 0.1 // 前端采样率，随机10%，0.1~1.0
-		integrations: [new Sentry.Integrations.Vue({ Vue })] // 拦截Vue config.errorHandler事件，仅在Vue项目使用，其它框架请参考官方文档
+		sampleRate: 0.1, // 前端采样率，随机10%，0.1~1.0
+		integrations: [new Sentry.Integrations.Vue({ Vue })], // 拦截Vue config.errorHandler事件，仅在Vue项目使用，其它框架请参考官方文档
+		whitelistUrls: [ // 白名单机制，建议针对项目使用的业务JS文件进行开放，可以去除大部分劫持或浏览器广告导致的诡异错误
+			/disqus\.com/,
+			/getsentry\.com/
+		],
 	});
 }
 
@@ -133,7 +141,11 @@ if (process.env.NODE_ENV === 'production') {
 	Raven.config('http://449a0039d5864307b5207dd17b97e0d6@sentry.gztest.mail.163.com/2', {
 		release: `404_mobile@${process.env.version}`, // 版本号，与发布流程相匹配
 		environment: 'production', // 自定义环境，prod|test|t1|t2|dev|staging，与发布流程相匹配
-		sampleRate: 0.1 // 前端采样率，随机10%，0.1~1.0
+		sampleRate: 0.1, // 前端采样率，随机10%，0.1~1.0
+		whitelistUrls: [ // 白名单机制，建议针对项目使用的业务JS文件进行开放，可以去除大部分劫持或浏览器广告导致的诡异错误
+			/disqus\.com/,
+			/getsentry\.com/
+		],
 	}).install();
 }
 ```
